@@ -14,6 +14,7 @@ HOW TO CREATE NEW FILES:
 vim filename.txt (or .c file, whatever works)
 i for insert to type in the file
 :wq to save and exit the file
+esc to escape the insert/typing mode 
 
 HOW TO PUSH TO GITHUB
 git add --all (or git add file.txt)
