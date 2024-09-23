@@ -1,0 +1,10 @@
+(base) Puter:~ kalie_chang$ git clone git@github.com:graceemun/CP341.git
+Cloning into 'CP341'...
+remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (3/3), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+Receiving objects: 100% (3/3), done.
+(base) Puter:~ kalie_chang$ cd CP341
+(base) Puter:CP341 kalie_chang$ ls
+README.md
+(base) Puter:CP341 kalie_chang$ 
