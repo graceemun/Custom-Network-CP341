@@ -21,3 +21,6 @@ HOW TO PUSH TO GITHUB
 git add --all (or git add file.txt)
 git commit (and then type in what you added for commit note
 git push (PUSH IT!!) 
+
+HOW TO PULL
+git pull
