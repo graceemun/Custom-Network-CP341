@@ -1,3 +1,4 @@
+TO SET UP GIT
 (base) Puter:~ kalie_chang$ git clone git@github.com:graceemun/CP341.git
 Cloning into 'CP341'...
 remote: Enumerating objects: 3, done.
@@ -7,4 +8,14 @@ Receiving objects: 100% (3/3), done.
 (base) Puter:~ kalie_chang$ cd CP341
 (base) Puter:CP341 kalie_chang$ ls
 README.md
-(base) Puter:CP341 kalie_chang$ 
+(base) Puter:CP341 kalie_chang$
+
+HOW TO CREATE NEW FILES:
+vim filename.txt (or .c file, whatever works)
+i for insert to type in the file
+:wq to save and exit the file
+
+HOW TO PUSH TO GITHUB
+git add --all (or git add file.txt)
+git commit (and then type in what you added for commit note
+git push (PUSH IT!!) 
