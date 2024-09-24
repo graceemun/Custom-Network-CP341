@@ -18,13 +18,26 @@ int main(){
 	set_mode(PI, 27, PI_OUTPUT);
 	
 	for(int i = 0; i <= 10; i++){
-		gpio_write(PI,27,1);
-		time_sleep(1);
-		gpio_write(PI, 27,0);
-		time_sleep(1);
-		printf("BLINKING: %d\n", i);
+		gpio_write(PI,port1,1);
+		time_sleep(0.5);
+		gpio_write(PI, port1,0);
+		time_sleep(0.5);
+		gpio_write(PI,port2,1);
+		time_sleep(0.5);
+		gpio_write(PI,port2,0);
+		time_sleep(0.5);
+		gpio_write(PI,port3,1);
+		time_sleep(0.5);
+		gpio_write(PI,port3,0);
+		time_sleep(0.5);
+		gpio_write(PI,port4,1);
+		time_sleep(0.5);
+		gpio_write(PI,port4,0);
+		time_sleep(0.5);
+		printf("LED IS BLINKING %d\n", i);
 	}
-	
+
+//}	
 	return 0;
 
 }
