@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <pigpio_if2.h>
-
+//starting to work on receiving data
 int main(){
 	int recv = 26;
 	int PI = pigpio_start(NULL, NULL);
