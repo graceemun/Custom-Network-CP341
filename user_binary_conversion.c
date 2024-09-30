@@ -11,7 +11,7 @@ char* string_to_binary(char*s){
         binary[0] = '\0';
         for(size_t i = 0; i < len; i++){
                 char ch = s[i];
-                for(int j = 7; j>= 0; j++){
+                for(int j = 7; j>= 0; j--){
                         if(ch & (1 << j)){
                                 strcat(binary, "1");
                         }else{
@@ -36,7 +36,7 @@ int main(){
         char* user_input[200];
         int counter[200];
         printf("Type your message (200 characters max): ");
-        scanf("%[[^\n]", &user_input);
+        scanf("%[^\n]", &user_input);
         printf("\n");
         char* result = string_to_binary(user input)
         printf("%s\n Binary User Input: ", result);
