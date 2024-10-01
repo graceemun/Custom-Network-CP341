@@ -4,6 +4,10 @@
 #include <stdlib.h>
 
 
+<<<<<<< HEAD
+=======
+//changes user input string as binary
+>>>>>>> d5fabcf5000958aa9483910da4d92b0d5c38feb4
 char* string_to_binary(char*s) {
 	if(s==NULL) return 0;
 	size_t len = strlen(s);
@@ -22,6 +26,7 @@ char* string_to_binary(char*s) {
 	return binary;
 }
 
+<<<<<<< HEAD
 void send_manchester(char *data, int PI, int gpio){
 	int size = strlen(data);
 	
@@ -38,6 +43,27 @@ void send_manchester(char *data, int PI, int gpio){
 			//time_sleep(0.1);
 			gpio_write(PI, gpio, 0);
 			//time_sleep(0.1);
+=======
+//bit rate defined
+int bit_rate = 1;
+
+//send manchester logic
+void send_manchester(char *data, int PI, int gpio){
+	int size = sizeof(data) + 2; //need to account for the bits we added to beginning and end
+	for (int i = 0; i < size; i++){
+		if (data[i] == 1){
+			printf("Sending 1...\n");
+			gpio_write(PI, gpio, 0);
+			time_sleep(bit_rate);
+			gpio_write(PI, gpio, 1);
+			time_sleep(bit_rate);				
+		} else if (data[i] == 0){
+			printf("Sending 0...\n");
+			gpio_write(PI, gpio, 1);
+			time_sleep(bit_rate);
+			gpio_write(PI, gpio, 0);
+			time_sleep(bit_rate);
+>>>>>>> d5fabcf5000958aa9483910da4d92b0d5c38feb4
 		} 
 	}	
 }
@@ -48,6 +74,7 @@ int main(){
         int port3 = 23;
         int port4 = 21;
 
+<<<<<<< HEAD
 //	char* user_response[200];
 
 //	printf("Type your message (200 characters max): \n");
@@ -76,10 +103,42 @@ int main(){
         	printf("Bit %d: %c\n", i + 1, data_buffer[i]);
     	}
 	*/	
+=======
+	//prompt user to type
+	char user_input[200];
+	printf("Type your message (200 characters max): \n");
+	scanf("%[^\n]", &user_input);
+	
+	//quits if over 200 characters
+	if(strlen(user_input) > 200){
+		printf("Too long!\n");
+		exit(-1);
+	}
+
+	// turn user input to binary
+	char* result = string_to_binary(user_input);
+	printf("Binary user result: %s\n", result);
+
+	//store result into array
+	char result_binary[strlen(result)+2];
+
+	//HARDCODED VALUES ARE NOT STORED, ONLY SENT
+	//hardcoding first value as 1
+	int result_counter = 1;
+	result_binary[0] = '1' - '0';
+	for (int k = 0; k < strlen(result); k++){
+		result_binary[result_counter] = result[k] - '0'; //change to binary so it dont default to ascii
+		printf("Stored binary is: %d\n", result_binary[result_counter]);
+		result_counter += 1;
+	}
+	//hardcode last value as 0
+	result_binary[strlen(result)+1] = 0; 
+>>>>>>> d5fabcf5000958aa9483910da4d92b0d5c38feb4
 
         
 	int PI = pigpio_start(NULL, NULL);
         set_mode(PI, port1, PI_OUTPUT);
+<<<<<<< HEAD
 	
 	send_manchester(data_buffer, PI, port1);
 
@@ -88,3 +147,13 @@ int main(){
 	return 0;
 }
 
+=======
+	send_manchester(result_binary, PI, port1);
+	pigpio_stop(PI);
+	
+
+	return 0;
+}
+
+
+>>>>>>> d5fabcf5000958aa9483910da4d92b0d5c38feb4
