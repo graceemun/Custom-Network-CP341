@@ -10,7 +10,7 @@
 uint32_t current_tick = 0;
 uint32_t previous_tick;
 unsigned current_level = 0;
-unsigned prev_level;
+unsigned previous_level;
 uint32_t time_diff;
 int result_counter = 0;
 int pair = 0;
@@ -43,60 +43,52 @@ char* string_to_binary(char*s, size_t len) {
 //send manchester logic
 //Part of SEND logic
 void send_manchester(char* data, int size, int PI, int gpio){
-	//printf("size of data: %d\n", size);
 	for (int i = 0; i < size; i++){
 		if (data[i] == 1){
-			//printf("1");
 			gpio_write(PI, gpio, 0);
 			time_sleep(0.1);
 			gpio_write(PI, gpio, 1);
-			time_sleep(0.1);				
+			time_sleep(0.1);
 		} else if (data[i] == 0){
-			//printf("0");
 			gpio_write(PI, gpio, 1);
 			time_sleep(0.1);
 			gpio_write(PI, gpio, 0);
 			time_sleep(0.1);
-		} 
-	}	
+		}
+	}
 }
 
 void my_callback(int pi, unsigned user_gpio, unsigned level, uint32_t tick){
 	printf("Recieving signals\n");
-	
 
-	if (previous_tick == 0) {	
+
+	if (previous_tick == 0) {
 		// solution: set level to zero in receive, do not collect the first bit sent!!!!!!!!!
 		// in sender, add a 1 to the beginning of ALL messages
 		//hardcoded so first value isn't a crazy high number and break our if statement (detect first level change)
 		previous_tick = tick - 1;
 		current_tick = tick;
 		//hardcoded previous level to be low at 0 for the very first time the system runs
-		prev_level = 0;
+		previous_level = 0;
 		current_level = level;
-	//	printf("In the if\n");
 	} else {
 		previous_tick = current_tick;
 		current_tick = tick;
-		prev_level = current_level;
+		previous_level = current_level;
 		current_level = level;
-	//	printf("in the else\n");
 	}
 	time_diff = current_tick - previous_tick;
 
 	if (time_diff >= 180000 && time_diff <= 230000) {
 		binary_res[result_counter] = current_level;
 		result_counter++;
-		//printf("curr level %d\n", current_level);
 	} else if (time_diff >= 80000 && time_diff <= 106000) {
 		pair++;
 
 		if (pair == 2) {
-			//printf("time diff %d\n", time_diff);
 			binary_res[result_counter] =current_level;
 			result_counter++;
 			pair = 0;
-		//printf("curr level pair 2 %d\n", current_level);
 		}
 	}
 }
@@ -110,17 +102,16 @@ void binary_convertor(char *data, int data_length){
 		//reset binary for each byte of data (each character/letter)
 		binary = 0;
 		bits = 0;
-		
+
 		for(int j = 0; j < 8 && (i+j)<data_length;j++){
 		binary <<=1;
 		if (data[i+j] == 1){
 			binary |= 1;
-		} 
+		}
 		bits++;
 	}
 
 		if(bits == 8) {
-			//printf("Your character is in binary_converter print: %c", binary);
 			printf("%c", binary);
 		}
 
@@ -141,15 +132,14 @@ void *send_thread(){
 
 	// MAKE SURE CORRECT PORT IS BEING SET
     	set_mode(PI, port4, PI_OUTPUT);
-	
+
 	int message = 0;
-	
+
 	//prompt user to type
 	char user_input[200];
 	bool running = true;
 
 	while(running) {
-	//char user_input[200];	
 		printf("\nType your message. Type 'yy' to exit the program. (200 characters max): \n");
 		scanf("%200[^\n]%*c", &user_input);
 
@@ -159,7 +149,7 @@ void *send_thread(){
 			running = false;
 			exit(-1);
 		}
-	
+
 	//quits if over 200 characters
 		if(strlen(user_input) > 200){
 			printf("Too long!\n");
@@ -181,7 +171,7 @@ void *send_thread(){
 		}
 
 	//Setting data trailer as '0'
-		result_binary[strlen(result)+1] = 0; 
+		result_binary[strlen(result)+1] = 0;
 		int size_of = sizeof(result_binary) + 2;
 
 		send_manchester(result_binary, size_of, PI, port1);
@@ -199,8 +189,6 @@ void *receive_thread(){
 	int long_tracker = 0;
 	char binary_result[1600];
 	int PI = pigpio_start(NULL, NULL);
-//	binary_res = malloc(MAX_BIT * sizeof(char));
-	// ----------------------
 
 	//run = true;
 	while(run) {
@@ -211,22 +199,8 @@ void *receive_thread(){
 		callback(PI, recv, EITHER_EDGE, my_callback);
 		pthread_mutex_unlock(&mutex);
 
-		//pthread_mutex_lock(&mutex);
-//	printf("here?\n");	
-		//if(result_counter>=8){
 		if (tracker == 10 || long_tracker == 10) {
 			run = false;
-			/*
-			binary_res = realloc(binary_res, MAX_BIT * sizeof(char));
-			printf("Stopping receive after 10 events\n");
-			memcpy(binary_result, binary_res, result_counter);
-			binary_result[result_counter] = '\0';
-			
-//			printf("Binary result counter: %d\n", result_counter);
-			binary_convertor(binary_result, result_counter);
-			tracker = 0;
-			long_tracker = 0;
-			*/
 		}
 		if (time_diff >= 180000 && time_diff <= 203000){
 			tracker = 0;
@@ -237,62 +211,22 @@ void *receive_thread(){
 		}
 
 	}
-	//pthread_mutex_unlock(&mutex);
-	//run = true;
-	
 
-//	binary_result[result_counter+1];
-//
-//
 			binary_res = realloc(binary_res, MAX_BIT * sizeof(char));
 			printf("Stopping receive after 10 events\n");
 			memcpy(binary_result, binary_res, result_counter);
 			binary_result[result_counter] = '\0';
-			
-//			printf("Binary result counter: %d\n", result_counter);
+
 			binary_convertor(binary_result, result_counter);
 
 			if(result_counter>10){
 				run = true;
 			}
-//
-//
-//
-//	run = true;
-	//result_counter = 0;
-	// Storing Received Data ...
-//	binary_res = (char*)malloc(MAX_BIT * sizeof(char));
-	// DATA STORED IN binary_result AS INTS
-
-/*
-	memcpy(binary_result, binary_res, result_counter);
-	binary_result[result_counter] = '\0';
-	
-	//printf("binary_result: %s\n", binary_result);
-	
-	//CONVERTING TO TEXT HERE
-	if(result_counter>0){
-	binary_convertor(binary_result, result_counter);
-	printf("%s\n", binary_result);
-	result_counter = 0;
-	tracker = 0;
-	long_tracker = 0;
-	previous_tick = 0;
-	current_tick = 0;
-	//reset buffer
-	memset(binary_res, 0, MAX_BIT);
-	}
-	//result_counter = 0;
-*/
-//	pigpio_stop(PI);
-//	return NULL;
 }
-
 
 int main(){
 	// Storing Received Data ...
 	binary_res = (char*)malloc(MAX_BIT * sizeof(char));
-//	free(binary_res);
 
 	int PI = pigpio_start(NULL, NULL);
 	pthread_t thread[2];
@@ -303,10 +237,8 @@ int main(){
 
 	pthread_join(thread[0], NULL);
 	pthread_join(thread[1], NULL);
-	
-	free(binary_res);	
+
+	free(binary_res);
 	pigpio_stop(PI);
 	return 0;
 }
-
-
