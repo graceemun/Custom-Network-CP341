@@ -203,7 +203,7 @@ void *receive_thread(){
 		pthread_mutex_unlock(&mutex);
 		
 
-		if (tracker ==12 || long_tracker == 12) {
+		if (tracker ==20 || long_tracker == 20) {
 			memcpy(binary_result, binary_res, result_counter);
 			binary_result[result_counter] = '\0';
 			binary_convertor(binary_result, result_counter - 1);
