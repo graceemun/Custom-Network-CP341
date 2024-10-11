@@ -6,8 +6,8 @@
 #include <pthread.h>
 
 #define MAX_BIT 1600 //max data is 200 characters = 1600 bytes
-//#define MY_ADDRESSS 00001; //make sure each pi has a unique address
 #define ADDRESS_SIZE 5
+#define QUEUE_SIZE 500 //QUEUE SIZE IS 213 BECAUSE THAT IS THE MAX 
 
 uint32_t current_tick = 0;
 uint32_t previous_tick;
@@ -22,26 +22,21 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 int *receive_address;
 int *sender_address;
 
+int PI;
 //------------STORED PI INFORMATION-----------//
-//THIS PI
-char my_username[50] = "@pp1e_pi69";
-int my_address[5] = {1,0,1,0,1};
+//OTHER PI
+char apple_pi[50] = "@pp1e_pi69";
+int apple_pi_address[5] = {1,0,1,0,1};
 
-// refactor second_pi_username to froot_pi
-//
-//SECOND PI
+//this PI
 char froot_pi[50] = "fr00t_pi";
 int froot_pi_address[5] = {1,0,0,0,1};
 
-
-// refactor third_pi_username to raspberry_pi
-// and third pi address to raspberry_pi_address
 //THIRD PI
-char raspberry_pi[50] = "r4sp_b3rry_pi";
-int raspberry_pi_address[5] = {1,1,0,1,1};
+char my_username[50] = "r4sp_b3rry_pi";
+int my_address[5] = {1,1,0,1,1};
 //-------------------------------------------//
 
-char *total_response;
 //source counter
 int src_counter = 0;
 //destination counter
@@ -58,6 +53,31 @@ int recv1 = 26;
 int recv2 = 24;
 int recv3 = 22;
 int recv4 = 20;
+
+//--------queue-------
+/*(char *incoming_queue[QUEUE_SIZE]; //array to hold incoming messages
+char *outgoing_queue[QUEUE_SIZE]; //array to hold messages being read
+int in_queue_size = 0;
+int out_queue_size = 0;
+*/
+typedef struct{
+	char *items[QUEUE_SIZE];
+	int front;
+	int rear;
+} Queue;
+
+void initializeQueue(Queue* q){
+	q->front = -1;
+	q->rear = 0;
+}
+bool isEmpty(Queue* q){
+	return (q->front == q-> rear - 1);
+}
+bool isFull(Queue* q){
+	return (q->rear == QUEUE_SIZE);
+}
+
+//---------------------------
 
 //prompt user to type username and store it....
 char* create_user(){
@@ -134,8 +154,6 @@ void my_callback(int pi, unsigned user_gpio, unsigned level, uint32_t tick){
 		//hardcoded previous level to be low at 0 for the very first time the system runs
 		prev_level = 0;
 		current_level = level;
-		//total_response[total_response_counter] = current_level;
-		//total_response_counter++;
 		//printf("Start: %d\n",current_level);
 	} else {
 		previous_tick = current_tick;
@@ -152,15 +170,17 @@ void my_callback(int pi, unsigned user_gpio, unsigned level, uint32_t tick){
 			dest_counter++;
 		} else if (dest_counter == 5) {
 			what_destination = check_destination(receive_address);
-			if (src_counter < 5) {
+		}
+		if (what_destination){
+		       	if(src_counter < 5) {
 				sender_address[src_counter] = current_level;
 				src_counter++;
-			} else if (src_counter == 5) {
+			}else if(src_counter == 5) {
 				binary_res[result_counter] = current_level;
 				result_counter++;
+
 			}
 		}
-
 	} else if (time_diff >= 1000 && time_diff <= 8000) {
 		pair++;
 		if (pair == 2) {
@@ -168,8 +188,10 @@ void my_callback(int pi, unsigned user_gpio, unsigned level, uint32_t tick){
 				receive_address[dest_counter] = current_level;
 				dest_counter++;
 				pair = 0;	
-			} else if (dest_counter == 5){
+			}else if (dest_counter == 5){
 				what_destination = check_destination(receive_address);
+				
+			}if (what_destination){	
 				if(src_counter < 5) {
 					sender_address[src_counter] = current_level;
 					src_counter++;
@@ -181,7 +203,7 @@ void my_callback(int pi, unsigned user_gpio, unsigned level, uint32_t tick){
 					pair = 0;
 				}
 			}
-		}			
+		}
 	}
 }
 
@@ -189,7 +211,6 @@ void my_callback(int pi, unsigned user_gpio, unsigned level, uint32_t tick){
 void binary_convertor(char *data, int data_length) {
 	unsigned char binary = 0;
 	int bits = 0;
-	
 	//process 8 bit at a time
 	for(int i = 0; i < data_length; i+=8){
 		//reset binary for each byte of data (each character/letter)
@@ -213,97 +234,123 @@ void binary_convertor(char *data, int data_length) {
 	printf("\n");
 }
 
+//------------QUEUE-----------------
+void enqueue(Queue* q, char *message){
+	//pthread_mutex_lock(&mutex);
+	if(isFull(q)){
+		//printf("Queue is full\n");
+		return;
+	}
+	q->items[q->rear] = message;
+	q->rear++;
+}
+
+void dequeue(Queue* q){
+	if(isEmpty(q)){
+		//printf("Queue is empty\n");
+		return;
+	}
+	q->front++;
+}
+/*
+void printQueue(Queue* q){
+	if (isEmpty(q)){
+		printf("Queue is empty\n");
+		return;
+	}
+	printf("current queue: ");
+	for (int i = q->front + 1; i < q->rear; i++){
+		printf("%d", q->items[i]);
+	}
+	printf("\n");
+}
+*/
+//------------------------------------------
+
 void *send_thread(){
 	printf("Starting send thread...\n");
 	/*
 	 * !CAUTION! Make sure to change 'tx' to appropriate transmitter port
 	 */
-	int tx;
-	int second_pi = port1;
-	int third_pi = port3;
+	int tx = port2;
 
-	int PI = pigpio_start(NULL, NULL);
-    	
 	//prompt user to type
-	char user_input[200];
 	bool running = true;
 	int recipient_address[5];
-	printf("Who do you want to send your message to? Press 'g' for r4spb3rry_pi or 'w' for fr00t_pi. You do not need to press 'g' or 'w' continue chatting with the user you were previously chatting with. To switch users to chat with, press 'g' or 'w'. Type 'yy' to exit the program. Your message cannot exceed 200 characters max\n");
+	// FOR FUTURE: implement character size checking in a better way instead of having to allocate more space than required
+	char user_input[sizeof(char) * 500];
+	printf("Who do you want to send your message to? Type 'w*' for froot_pi or 'k*' for @pple_pi69. You do not need to press 'w*' or 'k*' continue chatting with the user you were previously chatting with. To switch users to chat with, press 'w*' or 'k*'. Type 'yy' to exit the program. Your message cannot exceed 200 characters max\n");
 
 	while(running) {
-	//char user_input[200];	
 		printf("\nSend from %s", my_username);
 		printf("\n");
-		scanf("%200[^\n]%*c", &user_input);
+		//scanf("%200[^\n]%*c", &user_input);
+		scanf("%[^\n]%*c", &user_input);
 		
-		//choose recipient
-		if(user_input[0] == 'w') {
-			printf("Sending to fr00t_pi\n");
-			memcpy(recipient_address,froot_pi_address,sizeof(froot_pi_address));
-			tx = second_pi;
-		} else if(user_input[0] == 'g') { 
-			printf("Sending to r4spb3rry_pi\n");
-			memcpy(recipient_address,raspberry_pi_address,sizeof(raspberry_pi_address));
-			tx = third_pi;
+		if(strlen(user_input) > 199){
+			printf("Message Limit Exceeded... Please send shorter message!\n");
+			printf("Size: %d\n", strlen(user_input));	
+		}else if (strlen(user_input) <= 199){
+			printf("String length: %d\n", strlen(user_input));
+			if(user_input[0] == 'w' && user_input[1] == '*'){
+				//choose recipient
+				printf("Sending to fr00t_pi\n");
+				memcpy(recipient_address, froot_pi_address, sizeof(froot_pi_address));
+				result_counter = 0;
+				current_tick = 0;
+				previous_tick = 0;
+				current_level = 0;
+				prev_level = 0;
+				time_diff = 0;
+				binary_res = realloc(binary_res, MAX_BIT);
+				receive_address = realloc(receive_address, ADDRESS_SIZE * sizeof(int));
+				sender_address = realloc(sender_address, ADDRESS_SIZE * sizeof(int));
+			}else if(user_input[0] == 'k' && user_input[1] == '*'){
+				printf("Sending to @pple_pi69\n");
+				memcpy(recipient_address, apple_pi_address, sizeof(apple_pi_address));
+				result_counter = 0;
+				current_tick = 0;
+				previous_tick = 0;
+				prev_level = 0;
+				time_diff = 0;
+				binary_res = realloc(binary_res, MAX_BIT);
+				receive_address = realloc(receive_address, ADDRESS_SIZE * sizeof(int));
+				sender_address = realloc(sender_address, ADDRESS_SIZE * sizeof(int));
+			}else if(user_input[0] == 'y' && user_input[1] == 'y') {
+				printf("Exiting...\n");
+				running = false;
+				exit(-1);
+			}
+			set_mode(PI, tx, PI_OUTPUT);
+			// turn user input to binary
+			char* result = string_to_binary(user_input, strlen(user_input));
+			//store result into array
+			char result_binary[strlen(result)+2];
+			//Setting data header as '1'
+			int result_counter = 1;
+			result_binary[0] = '1' - '0';
+			//store recipient address first
+			for(int i = 0; i < 5; i++){
+				result_binary[result_counter] = recipient_address[i];
+				result_counter +=1;
+			}
+			// store my address
+			for(int j = 0; j < 5; j++) {
+				result_binary[result_counter] = my_address[j];
+				result_counter += 1;
+			}
+			//message
+			for (int k = 0; k < strlen(result); k++){
+				result_binary[result_counter] = result[k] - '0'; //change to binary so it dont default to ascii
+				result_counter += 1;
+			}
+				//Setting data trailer as '0'
+				result_binary[strlen(result)+1+10] = 0; 
+				result_counter += 1;
+				send_manchester(result_binary, result_counter, PI, tx);
+				free(result);
 		}
-		/*
-		else{
-			printf("Invalid input, please try again!\n");
-			exit(-1);
-		}
-		*/
-		set_mode(PI, tx, PI_OUTPUT);
 	
-		//user exit code
-		if(user_input[0] == 'y' && user_input[1] == 'y') {
-			printf("Exiting...\n");
-			running = false;
-		}
-		
-	//quits if over 200 characters
-		if(strlen(user_input) > 200){
-			printf("Too long!\n");
-			break;
-		}
-
-
-
-	// turn user input to binary
-		char* result = string_to_binary(user_input, strlen(user_input));
-	//store result into array
-		char result_binary[strlen(result)+2];
-	//Setting data header as '1'
-		int result_counter = 1;
-		result_binary[0] = '1' - '0';
-
-		//store recipient address first
-		for(int i = 0; i < 5; i++){
-			result_binary[result_counter] = recipient_address[i];
-			result_counter +=1;
-		}
-		// store my address
-		for(int j = 0; j < 5; j++) {
-			result_binary[result_counter] = my_address[j];
-			result_counter += 1;
-		}
-		
-		//message
-		for (int k = 0; k < strlen(result); k++){
-			result_binary[result_counter] = result[k] - '0'; //change to binary so it dont default to ascii
-			result_counter += 1;
-		}
-
-		//for(int z = 0; z < strlen(result); z++){
-		//	printf("Sent this: %d\n", result_binary[z]);
-		//}
-
-
-	//Setting data trailer as '0'
-		result_binary[strlen(result)+1+10] = 0; 
-		result_counter += 1;
-		send_manchester(result_binary, result_counter, PI, tx);
-		free(result);
-
 	}
 }
 
@@ -313,9 +360,9 @@ void *receive_thread(){
 	/*
 	 * !CAUTION! Make sure to change 'rx' to appropriate receiver port
 	 */
-	int second_pi = recv4;
-	int third_pi = recv3;
-
+	int second_pi = recv2;
+	Queue q;
+	initializeQueue(&q);
 	char binary_result[1600];
 	int PI = pigpio_start(NULL, NULL);
 	int tracker = 0;
@@ -333,82 +380,36 @@ void *receive_thread(){
 		//recieve from second pi
 		callback(PI, second_pi, EITHER_EDGE, my_callback);
 		
-		//recieve from third pi
-		callback(PI, third_pi, EITHER_EDGE, my_callback);
 		pthread_mutex_unlock(&mutex);
 		
 		if (tracker == 20 || long_tracker == 20) {
 			memcpy(binary_result, binary_res, result_counter);
 			binary_result[result_counter] = '\0';
-
-			if(memcmp(sender_address, froot_pi_address,sizeof(froot_pi_address)) == 0) {
+		//------------------------------------------------------------------------	
+			// Get correct username based off of user address
+			if (memcmp(sender_address, apple_pi_address,sizeof(apple_pi_address)) == 0) {
+				memcpy(user, apple_pi, sizeof(apple_pi));
+			} else if(memcmp(sender_address, froot_pi_address,sizeof(froot_pi_address)) == 0) {
 				memcpy(user, froot_pi, sizeof(froot_pi));
-			} else if (memcmp(sender_address,raspberry_pi_address,sizeof(raspberry_pi_address)) == 0) {
-				memcpy(user, raspberry_pi,sizeof(raspberry_pi));
 			} else {
 				strcpy(user,"unknown");
 			}
+			printf("\nFrom user %s: ", user);
+		//------------------------------------------------------------------------	
+				
+			//ENQUEUED BINARY RESULT
+			//pthread_mutex_lock(&mutex);
+			enqueue(&q, binary_result);
+		//	pthread_mutex_unlock(&mutex);
+			//printQueue(&q);
 
-			//printf("\nFrom user %s: ", user);
-			
-			//NEW KALIE CODE RAHHHHH
-			//when I recieve the message from the user (either raspberry_pi or froot_pi, I need to know if it is meant for me or meant for the other person
-			//if the address is froot_pi's address, forward to froot_pi
-			if(memcmp(receive_address, froot_pi_address, sizeof(froot_pi_address))==0){
-			//	printf("DO NOT DISPLAY IN FINAL: Forward to froot_pi\n");
-				total_response[0] = 1;
-				int total_res_size = 1;
-
-				for(int m = 0; m < 5; m++) {
-					total_response[total_res_size] = receive_address[m];
-					total_res_size++;
-				}
-				for(int n = 0; n < 5; n++) {
-					total_response[total_res_size] = sender_address[n];
-					total_res_size++;
-				}
-				for(int o = 0; o < result_counter - 1; o++) {
-					total_response[total_res_size] = binary_result[o];
-					total_res_size++;
-				}
-
-				total_response[total_res_size] = 0;
-				total_res_size++;
-				send_manchester(total_response, total_res_size, PI, port1);
-			//else forward to raspberry_pi
-			}else if(memcmp(receive_address, raspberry_pi_address, sizeof(raspberry_pi_address))==0){
-			//	printf("DO NOT DISPLAY IN FINAL: forward to raspberry_pi\n");
-				total_response[0] = 1;
-				int total_res_size = 1;
-
-				for(int i = 0; i < 5; i++) {
-					//printf("%d",receive_address[i]);
-					total_response[total_res_size] = receive_address[i];
-					total_res_size++;
-				}
-
-				for(int j = 0; j < 5; j++) {
-					total_response[total_res_size] = sender_address[j];
-					total_res_size++;
-				}
-
-				for(int p = 0; p < result_counter -1; p++) {
-					total_response[total_res_size] = binary_result[p];
-					total_res_size++;
-				}
-
-				total_response[total_res_size] = 0;
-				total_res_size++;
-
-				//printf("Rasp Pi Total response counter %d\n", total_response_counter);
-				send_manchester(total_response, total_res_size, PI, port3);
-			}else{
-				printf("\nFrom user %s: ",user);
-				binary_convertor(binary_result, result_counter-1);
-			}
-
-			//------------------------------------//
-			total_response = realloc(total_response, MAX_BIT+12);
+			//DEQUEUE
+			pthread_mutex_lock(&mutex);
+			dequeue(&q);
+			pthread_mutex_unlock(&mutex);
+			//printQueue(&q);
+		
+			binary_convertor(binary_result, result_counter - 1);
 			binary_res = realloc(binary_res, MAX_BIT);
 			receive_address = realloc(receive_address, ADDRESS_SIZE * sizeof(int));
 			sender_address = realloc(sender_address, ADDRESS_SIZE * sizeof(int));
@@ -431,13 +432,11 @@ void *receive_thread(){
 
 }
 int main(){
-	// Storing Received Data ...
 	binary_res = (char*)malloc(MAX_BIT * sizeof(char));
-	total_response = (char*)malloc(MAX_BIT+12 * sizeof(char));
 	receive_address = (int*)malloc(ADDRESS_SIZE * sizeof(int));
 	sender_address = (int*)malloc(ADDRESS_SIZE * sizeof(int));
 
-	int PI = pigpio_start(NULL, NULL);
+	PI = pigpio_start(NULL, NULL);
 	pthread_t thread[2];
 	bool chatting = true;
 
@@ -450,11 +449,9 @@ int main(){
 	pthread_join(thread[1], NULL);
 	
 	free(binary_res);
-	free(total_response);
 	free(receive_address);	
 	free(sender_address);
 	pigpio_stop(PI);
 	return 0;
 }
-
 
