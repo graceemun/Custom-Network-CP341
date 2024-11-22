@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>HTML Login Form</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <style>
+        h1 {text-align: center;}
+        h3 {text-align: center;}
+        p {text-align: center;}
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h1>Language Exchange</h1>
+    <h3>Login</h3>
+
+    <!--    redirect the action to the DUO authentication -->
+    <form action="/authenticate" class="form-horizontal">
+        <!--    username text box    -->
+        <div class="form-group">
+            <div class="col-sm-offset-3 col-sm-6">
+                <label for="InputUsername" style="font-size: 1.25em">Username:</label>
+                <input type="text" class="form-control input-lg" id="InputUsername" placeholder="Enter your Username" required>
+            </div>
+        </div>
+
+        <!--   password text box     -->
+        <div class="form-group">
+            <div class="col-sm-offset-3 col-sm-6">
+                <label for="InputPassword" style="font-size: 1.25em">Password:</label>
+                <input type="password" class="form-control input-lg" id="InputPassword" placeholder="Enter your Password" required>
+            </div>
+        </div>
+
+        <!--    Login button    -->
+        <div class="form-group text-center">
+            <div class="col-sm-offset-3 col-sm-6">
+                <button type="submit" class="btn btn-success">Login</button>
+            </div>
+        </div>
+
+        <!--    Redirect to the Create an Account page   -->
+        <p>
+            Not registered?
+            <a href="#" style="text-decoration: none;">
+                Create an account
+            </a>
+        </p>
+
+    </form>
+</div>
+
+</body>
+</html>

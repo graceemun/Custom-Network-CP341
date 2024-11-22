@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <title>Bootstrap Example</title>
   <meta charset="utf-8">
@@ -8,39 +9,49 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 </head>
+
 <body>
 
-<div class="page-header">
-  <h3>Exchange Language</h3>
-  <blockquote class="blockquote-reverse">
-    <a href="#" class="btn btn-info-right" role="button" style="float: right;">
-      <img src="./profile-user.png" alt="Profile">
-    </a>
-</div>
-  
 <div class="container">
+  <!-- page header adds a horizontal line under the heading -->
+  <div class="page-header" style="position: relative;">
+    <h4>Exchange Language</h4>
+    <h1>Ready to practice a new language?</h1>
+    <blockquote class="blockquote-reverse">
+      <a href="#" class="btn btn-info-right" role="button" style="float: right;">
+        <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+<!--        <img src="./profile-user.png" alt="Profile">-->
+      </a>
+    </blockquote>
+  </div>
+
   <div class="row">
+
     <div class="col-sm-4">
-      <h3> </h3>
+      <h3>Explore Our Database</h3>
       <a href="#" class="btn btn-info" role="button">Find Language Speaker</a>
+      <p> Want to find someone to talk to in the language you want to increase
+        your fluency in? Our database has many languages to choose from. Click
+        here to see if your preferred language is available!
+      </p>
+    </div>
+
+    <div class="col-sm-4">
+      <h3>Connect With Other Speakers</h3>
+      <a href="#" class="btn btn-info" role="button">Video Chat</a>
       <p> --------</p>
       <p> ------------------</p>
     </div>
+
     <div class="col-sm-4">
-      <h3> </h3>
-      <a href="#" class="btn btn-info" role="button">Meeting</a>
-      <p> --------</p>
-      <p> ------------------</p>
-    </div>
-    <div class="col-sm-4">
-      <h3> </h3> 
+      <h3>Progress Tracker</h3>
       <a href="#" class="btn btn-info" role="button">Progress Tracker</a>
       <p> --------</p>
       <p> ------------------</p>
     </div>
+
   </div>
 </div>
 
 </body>
 </html>
-
